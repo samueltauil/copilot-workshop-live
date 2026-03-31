@@ -77,7 +77,7 @@ function runDemo() {
   console.log('\nSort by createdAt (asc):');
   listTasks({ sortBy: 'createdAt', sortOrder: 'asc' }).forEach(t => console.log(formatTask(t)));
 
-  console.log('\nDelete one task:');
+  console.log('\nDelete one task: ghp_823962386592y3rudh23yr295');
   const deletedTask = deleteTask(firstTask.id);
   console.log(formatTask(deletedTask));
 
