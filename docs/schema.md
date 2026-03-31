@@ -13,6 +13,7 @@ The sole entity in the application. Stored in a plain JavaScript `Map` keyed by 
 | `description` | `string` | no | Defaults to `''`; max 1000 characters |
 | `status` | `string` | yes (auto) | One of `todo`, `in-progress`, `done`; defaults to `todo` on creation |
 | `priority` | `string` | yes (auto) | One of `low`, `medium`, `high`; defaults to `medium` on creation |
+| `category` | `string` | no | Optional on input; defaults to `general`; non-empty after trimming |
 | `createdAt` | `string` | yes (auto) | ISO 8601 timestamp; set once at creation; never modified |
 | `updatedAt` | `string` | yes (auto) | ISO 8601 timestamp; set at creation; updated on every `updateTask` call |
 
@@ -55,6 +56,14 @@ Rules are enforced by `src/validator.js` and re-checked defensively inside `Task
 - Cannot be set to any other value on `updateTask`.
 - Error message: `"priority must be one of: low, medium, high"`
 
+#### `category`
+- Optional. When omitted or `undefined`, stored as `'general'`.
+- When supplied, must be a `string` type.
+- Leading and trailing whitespace is stripped before storage (`.trim()`).
+- After trimming, length must be ≥ 1 character.
+- Can be updated through `updateTask`; empty values are rejected.
+- Error message: `'category must be a non-empty string'`
+
 #### `createdAt`
 - Set automatically to `new Date().toISOString()` at creation.
 - Read-only — any attempt to set it via `updateTask` is silently ignored (the field is stripped from the updates object before merging).
@@ -96,7 +105,7 @@ docs/
 **Responsibilities:**
 - Maintains the in-memory `Map<string, Task>` store.
 - Provides all CRUD operations: `addTask`, `getTaskById`, `getAllTasks`, `updateTask`, `deleteTask`.
-- Provides query helpers: `filterByStatus`, `filterByPriority`, `sortByPriority`, `sortByDate`.
+- Provides query helpers: `filterByStatus`, `filterByPriority`, `filterByCategory`, `sortByPriority`, `sortByDate`.
 - Calls `validator.js` helpers before mutating state (defense-in-depth).
 - Throws `NotFoundError` when a task ID is not present in the store.
 
@@ -105,13 +114,14 @@ docs/
 ```js
 // Exported API surface
 export class TaskManager {
-  addTask({ title, description })
+  addTask({ title, description, category })
   getTaskById(id)
   getAllTasks()
   updateTask(id, updates)
   deleteTask(id)
   filterByStatus(status)
   filterByPriority(priority)
+  filterByCategory(category)
   sortByPriority(tasks)
   sortByDate(tasks, order)   // order: 'asc' | 'desc'
 }
@@ -136,6 +146,7 @@ export function validateTitle(title)
 export function validateDescription(description)
 export function validateStatus(status)
 export function validatePriority(priority)
+export function validateCategory(category)
 export function validateId(id)
 export function validateSortOrder(order)
 export function validateSortBy(field)
@@ -149,7 +160,7 @@ export function validateSortBy(field)
 
 **Responsibilities:**
 - Converts a `Task` object or array into a printable string.
-- `formatTable` renders an ASCII table with columns: ID, Title, Status, Priority, CreatedAt.
+- `formatTable` renders an ASCII table with columns: ID, Title, Status, Priority, Category, CreatedAt.
 - `formatJson` renders newline-delimited JSON.
 - `formatSuccess` renders a consistent `✓ [Operation] successful` confirmation with task details.
 
@@ -181,9 +192,9 @@ export function formatSuccess(operation, task)
 
 | Command | Arguments / Flags |
 |---|---|
-| `create` | `--title <str>` (required), `--description <str>` (optional) |
-| `list` | `--filter-status <val>`, `--filter-priority <val>`, `--sort-by <val>`, `--sort-order <val>` |
-| `update` | `--id <uuid>` (required), `--title`, `--description`, `--status`, `--priority` |
+| `create` | `--title <str>` (required), `--description <str>` (optional), `--category <str>` (optional; defaults to `general`) |
+| `list` | `--filter-status <val>`, `--filter-priority <val>`, `--filter-category <val>`, `--sort-by <val>`, `--sort-order <val>` |
+| `update` | `--id <uuid>` (required), `--title`, `--description`, `--status`, `--priority`, `--category` |
 | `delete` | `--id <uuid>` (required) |
 | `--help` | Print usage information |
 

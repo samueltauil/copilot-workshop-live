@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import {
   normalizeDescription,
   normalizeTitle,
+  validateCategory,
   validatePriority,
   validateStatus,
   validateTaskInput,
@@ -14,7 +15,7 @@ import {
 export class Task {
   /**
    * Create a Task instance from user-provided input.
-   * @param {{title: string, description?: string, status?: string, priority?: string}} input - Task creation input.
+   * @param {{title: string, description?: string, status?: string, priority?: string, category?: string}} input - Task creation input.
    */
   constructor(input) {
     const normalizedInput = validateTaskInput(input);
@@ -24,6 +25,7 @@ export class Task {
     this.description = normalizedInput.description;
     this.status = normalizedInput.status;
     this.priority = normalizedInput.priority;
+    this.category = normalizedInput.category;
     const timestamp = new Date().toISOString();
     this.createdAt = timestamp;
     this.updatedAt = timestamp;
@@ -33,11 +35,12 @@ export class Task {
     normalizeDescription(this.description);
     validateStatus(this.status);
     validatePriority(this.priority);
+    validateCategory(this.category);
   }
 
   /**
    * Apply validated updates and refresh modification timestamp.
-   * @param {{title?: string, description?: string, status?: string, priority?: string}} updates - Fields to update.
+   * @param {{title?: string, description?: string, status?: string, priority?: string, category?: string}} updates - Fields to update.
    * @returns {Task} The updated task instance.
    */
   update(updates) {
@@ -59,13 +62,18 @@ export class Task {
       this.priority = normalizedUpdates.priority;
     }
 
+    if (normalizedUpdates.category !== undefined) {
+      this.category = normalizedUpdates.category;
+      validateCategory(this.category);
+    }
+
     this.updatedAt = new Date().toISOString();
     return this;
   }
 
   /**
    * Convert the task to a plain object for safe external use.
-   * @returns {{id: string, title: string, description: string, status: string, priority: string, createdAt: string, updatedAt: string}} Serializable task object.
+   * @returns {{id: string, title: string, description: string, status: string, priority: string, category: string, createdAt: string, updatedAt: string}} Serializable task object.
    */
   toJSON() {
     return {
@@ -74,6 +82,7 @@ export class Task {
       description: this.description,
       status: this.status,
       priority: this.priority,
+      category: this.category,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };

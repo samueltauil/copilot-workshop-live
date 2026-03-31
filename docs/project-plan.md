@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Task Manager CLI is a command-line task management application built on Node.js 20+ using only built-in modules. Users can create, read, update, and delete tasks with support for filtering and sorting by status and priority. Data is stored in memory for the session. The application provides a lightweight, zero-dependency tool for tracking todos, work in progress, and completed items.
+Task Manager CLI is a command-line task management application built on Node.js 20+ using only built-in modules. Users can create, read, update, and delete tasks with support for filtering and sorting by status, priority, and category. Data is stored in memory for the session. The application provides a lightweight, zero-dependency tool for tracking todos, work in progress, and completed items across user-defined task categories.
 
 ## User Stories
 
@@ -33,7 +33,21 @@ Task Manager CLI is a command-line task management application built on Node.js 
      - System returns only matching tasks.
      - Invalid priority values are rejected with a clear error message.
 
-5. **As a user, I want to update a task so that I can change its title, status, priority, or description.**
+5. **As a user, I want to assign a category to a task so that I can organize tasks by context.**
+   - Acceptance criteria:
+     - User can optionally provide a category (for example: `work`, `personal`, `urgent`) when creating a task.
+     - If no category is provided, system defaults category to `general`.
+     - Category is included in all task display and API output.
+     - Category updates are supported when updating a task.
+
+6. **As a user, I want to filter tasks by category so that I can focus on a specific area of work.**
+   - Acceptance criteria:
+     - User can filter tasks by a category value.
+     - Filtering returns only tasks with an exact category match.
+     - Empty result sets are handled gracefully.
+     - Invalid category input (non-string or empty string) is rejected with a clear error message.
+
+7. **As a user, I want to update a task so that I can change its title, status, priority, description, or category.**
    - Acceptance criteria:
      - User provides a task ID and the fields to update.
      - System validates that the task ID exists.
@@ -41,19 +55,19 @@ Task Manager CLI is a command-line task management application built on Node.js 
      - System updates the `updatedAt` timestamp.
      - User receives confirmation with the updated task.
 
-6. **As a user, I want to delete a task so that I can remove items I no longer need to track.**
+8. **As a user, I want to delete a task so that I can remove items I no longer need to track.**
    - Acceptance criteria:
      - User provides a task ID to delete.
      - System validates that the task ID exists.
      - System removes the task from the list.
      - User receives confirmation of deletion.
 
-7. **As a user, I want to sort tasks by priority so that high-priority items appear first.**
+9. **As a user, I want to sort tasks by priority so that high-priority items appear first.**
    - Acceptance criteria:
      - User can request sorting by priority (high → medium → low).
      - System returns tasks in the sorted order.
 
-8. **As a user, I want to sort tasks by creation date so that I can see newest or oldest items first.**
+10. **As a user, I want to sort tasks by creation date so that I can see newest or oldest items first.**
    - Acceptance criteria:
      - User can request sorting by creation date in ascending or descending order.
      - System returns tasks in the sorted order.
@@ -69,6 +83,7 @@ Task Manager CLI is a command-line task management application built on Node.js 
 | `description` | `string` | Optional, defaults to empty string |
 | `status` | `string` | One of `todo`, `in-progress`, `done`; defaults to `todo` |
 | `priority` | `string` | One of `low`, `medium`, `high`; defaults to `medium` |
+| `category` | `string` | Optional on input; defaults to `general`; non-empty string |
 | `createdAt` | `string` | ISO 8601 timestamp, set at creation |
 | `updatedAt` | `string` | ISO 8601 timestamp, updated on any modification |
 
@@ -121,6 +136,7 @@ exercises/
 
 - Implement `filterByStatus(status)` to return tasks matching a status.
 - Implement `filterByPriority(priority)` to return tasks matching a priority.
+- Implement `filterByCategory(category)` to return tasks matching a category.
 - Implement `sortByPriority(tasks)` to arrange tasks by priority (high first).
 - Implement `sortByDate(tasks, order)` to arrange tasks by creation date (ascending/descending).
 - Implement `chain()` pattern or separate query builder for combining filters and sorts.
@@ -202,6 +218,7 @@ The application uses consistent error handling with the following error types:
 | `description` | Optional; if provided, max 1000 characters; defaults to empty string |
 | `status` | Not user-settable on creation; defaults to `todo` |
 | `priority` | Not user-settable on creation; defaults to `medium` |
+| `category` | Optional; if provided, non-empty string after trimming; defaults to `general` |
 
 **Example error:** `Error: title: Title is required and must be between 1 and 200 characters`
 
@@ -214,6 +231,7 @@ The application uses consistent error handling with the following error types:
 | `description` | Optional; if provided, max 1000 characters; can be empty string to clear |
 | `status` | Optional; must be one of `todo`, `in-progress`, `done` if provided |
 | `priority` | Optional; must be one of `low`, `medium`, `high` if provided |
+| `category` | Optional; must be a non-empty string if provided |
 
 **Example error:** `Error: status: Invalid status 'pending'. Must be one of: todo, in-progress, done`
 
@@ -231,6 +249,7 @@ The application uses consistent error handling with the following error types:
 |-----------|-------|
 | `--filter-status` | Optional; must be one of `todo`, `in-progress`, `done` |
 | `--filter-priority` | Optional; must be one of `low`, `medium`, `high` |
+| `--filter-category` | Optional; must be a non-empty string |
 | `--sort-by` | Optional; must be one of `priority`, `date` |
 | `--sort-order` | Optional; must be one of `asc`, `desc`; default is `asc` for date, descending for priority |
 
@@ -248,7 +267,7 @@ The application uses consistent error handling with the following error types:
 |----------|----------|
 | Empty task list | Display message "No tasks found." with exit code 0 |
 | Task list after filtering returns no matches | Display message "No tasks match the filter." with exit code 0 |
-| User provides both `--filter-status` and `--filter-priority` | Apply both filters (AND logic); return tasks matching both criteria |
+| User provides multiple filters (`--filter-status`, `--filter-priority`, `--filter-category`) | Apply all filters (AND logic); return tasks matching all provided criteria |
 | User provides invalid JSON or syntax in any input | Display `ValidationError` with description of the parsing issue |
 | User updates a task with no fields specified | Display message "No fields specified for update." without modifying the task |
 | Update operation encounters a conflict (e.g., task deleted mid-session) | Display `NotFoundError` for that task ID |
@@ -282,6 +301,8 @@ Removed: Buy groceries (ID: a1b2c3d4-e5f6-7890-abcd-ef1234567890)
 
 - ✓ All CRUD operations work correctly in memory.
 - ✓ Filtering by status and priority returns correct subsets.
+- ✓ Category defaults to `general` when not provided.
+- ✓ Filtering by category returns correct subsets.
 - ✓ Sorting by priority and date produces expected order.
 - ✓ Invalid inputs are rejected with helpful error messages.
 - ✓ Tasks persist throughout a single session.

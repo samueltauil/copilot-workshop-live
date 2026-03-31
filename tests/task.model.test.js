@@ -15,6 +15,7 @@ test('Task constructor creates a task with normalized fields and defaults', () =
   assert.equal(task.description, 'Initial design notes');
   assert.equal(task.status, 'todo');
   assert.equal(task.priority, 'medium');
+  assert.equal(task.category, 'general');
   assert.ok(!Number.isNaN(Date.parse(task.createdAt)));
   assert.equal(task.createdAt, task.updatedAt);
 });
@@ -23,11 +24,13 @@ test('Task constructor preserves valid explicit status and priority', () => {
   const task = new Task({
     title: 'Release prep',
     status: 'in-progress',
-    priority: 'high'
+    priority: 'high',
+    category: 'work'
   });
 
   assert.equal(task.status, 'in-progress');
   assert.equal(task.priority, 'high');
+  assert.equal(task.category, 'work');
 });
 
 test('Task constructor allows maximum title length boundary', () => {
@@ -116,8 +119,17 @@ test('Task update applies valid changes and refreshes updatedAt only', async () 
   assert.equal(task.status, 'done');
   assert.equal(task.priority, 'high');
   assert.equal(task.title, 'Create full tests');
+  assert.equal(task.category, 'general');
   assert.equal(task.createdAt, originalCreatedAt);
   assert.notEqual(task.updatedAt, originalUpdatedAt);
+});
+
+test('Task update applies category changes', () => {
+  const task = new Task({ title: 'Categorize me' });
+
+  task.update({ category: 'urgent' });
+
+  assert.equal(task.category, 'urgent');
 });
 
 test('Task update throws when no updatable fields are provided', () => {
@@ -125,7 +137,7 @@ test('Task update throws when no updatable fields are provided', () => {
 
   assert.throws(() => task.update({}), {
     name: 'TypeError',
-    message: 'at least one updatable field is required: title, description, status, priority'
+    message: 'at least one updatable field is required: title, description, status, priority, category'
   });
 });
 
@@ -153,6 +165,7 @@ test('Task toJSON returns a plain object copy', () => {
     description: task.description,
     status: task.status,
     priority: task.priority,
+    category: task.category,
     createdAt: task.createdAt,
     updatedAt: task.updatedAt
   });

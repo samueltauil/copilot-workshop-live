@@ -1,5 +1,6 @@
 import { Task } from '../models/task.js';
 import {
+  validateCategory,
   validatePriority,
   validateSortBy,
   validateSortOrder,
@@ -18,8 +19,8 @@ const priorityWeight = {
 
 /**
  * Create and store a new task.
- * @param {{title: string, description?: string, status?: string, priority?: string}} input - Task input.
- * @returns {{id: string, title: string, description: string, status: string, priority: string, createdAt: string, updatedAt: string}} The created task copy.
+ * @param {{title: string, description?: string, status?: string, priority?: string, category?: string}} input - Task input.
+ * @returns {{id: string, title: string, description: string, status: string, priority: string, category: string, createdAt: string, updatedAt: string}} The created task copy.
  */
 export function createTask(input) {
   try {
@@ -35,7 +36,7 @@ export function createTask(input) {
 /**
  * Return a task by its ID.
  * @param {string} id - Task ID.
- * @returns {{id: string, title: string, description: string, status: string, priority: string, createdAt: string, updatedAt: string}} A task copy.
+ * @returns {{id: string, title: string, description: string, status: string, priority: string, category: string, createdAt: string, updatedAt: string}} A task copy.
  */
 export function getTaskById(id) {
   validateTaskId(id);
@@ -50,8 +51,8 @@ export function getTaskById(id) {
 
 /**
  * Return all tasks, optionally filtered and sorted.
- * @param {{status?: string, priority?: string, sortBy?: string, sortOrder?: string}} [options={}] - Query options.
- * @returns {Array<{id: string, title: string, description: string, status: string, priority: string, createdAt: string, updatedAt: string}>} Copies of matching tasks.
+ * @param {{status?: string, priority?: string, category?: string, sortBy?: string, sortOrder?: string}} [options={}] - Query options.
+ * @returns {Array<{id: string, title: string, description: string, status: string, priority: string, category: string, createdAt: string, updatedAt: string}>} Copies of matching tasks.
  */
 export function listTasks(options = {}) {
   if (typeof options !== 'object' || options === null || Array.isArray(options)) {
@@ -61,6 +62,7 @@ export function listTasks(options = {}) {
   const {
     status,
     priority,
+    category,
     sortBy,
     sortOrder = 'asc'
   } = options;
@@ -71,6 +73,10 @@ export function listTasks(options = {}) {
 
   if (priority !== undefined) {
     validatePriority(priority);
+  }
+
+  if (category !== undefined) {
+    validateCategory(category);
   }
 
   if (sortBy !== undefined) {
@@ -86,6 +92,10 @@ export function listTasks(options = {}) {
 
   if (priority !== undefined) {
     tasks = tasks.filter((task) => task.priority === priority);
+  }
+
+  if (category !== undefined) {
+    tasks = tasks.filter((task) => task.category === category);
   }
 
   if (sortBy === 'priority') {
@@ -108,8 +118,8 @@ export function listTasks(options = {}) {
 /**
  * Update an existing task.
  * @param {string} id - Task ID.
- * @param {{title?: string, description?: string, status?: string, priority?: string}} updates - Update payload.
- * @returns {{id: string, title: string, description: string, status: string, priority: string, createdAt: string, updatedAt: string}} Updated task copy.
+ * @param {{title?: string, description?: string, status?: string, priority?: string, category?: string}} updates - Update payload.
+ * @returns {{id: string, title: string, description: string, status: string, priority: string, category: string, createdAt: string, updatedAt: string}} Updated task copy.
  */
 export function updateTask(id, updates) {
   validateTaskId(id);
@@ -131,7 +141,7 @@ export function updateTask(id, updates) {
 /**
  * Delete a task by ID.
  * @param {string} id - Task ID.
- * @returns {{id: string, title: string, description: string, status: string, priority: string, createdAt: string, updatedAt: string}} Deleted task copy.
+ * @returns {{id: string, title: string, description: string, status: string, priority: string, category: string, createdAt: string, updatedAt: string}} Deleted task copy.
  */
 export function deleteTask(id) {
   validateTaskId(id);

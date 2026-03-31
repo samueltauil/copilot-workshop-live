@@ -57,6 +57,35 @@ export function normalizeDescription(description) {
 }
 
 /**
+ * Normalize and validate a task category.
+ * @param {string|undefined} category - Candidate category.
+ * @returns {string} Trimmed category or default value.
+ * @throws {TypeError} When category is not a non-empty string.
+ * @example
+ * normalizeCategory('  work  ');
+ * // 'work'
+ * @example
+ * normalizeCategory(undefined);
+ * // 'general'
+ */
+export function normalizeCategory(category) {
+  if (category === undefined) {
+    return 'general';
+  }
+
+  if (typeof category !== 'string') {
+    throw new TypeError('category must be a non-empty string');
+  }
+
+  const normalizedCategory = category.trim();
+  if (normalizedCategory.length === 0) {
+    throw new TypeError('category must be a non-empty string');
+  }
+
+  return normalizedCategory;
+}
+
+/**
  * Validate a task status value.
  * @param {string} status - Candidate task status.
  * @returns {string} The validated status.
@@ -96,6 +125,22 @@ export function validatePriority(priority) {
   }
 
   return priority;
+}
+
+/**
+ * Validate a task category value.
+ * @param {string} category - Candidate task category.
+ * @returns {string} The validated category.
+ * @throws {TypeError} When category is not a non-empty string.
+ * @example
+ * validateCategory('work');
+ * // 'work'
+ * @example
+ * validateCategory('urgent');
+ * // 'urgent'
+ */
+export function validateCategory(category) {
+  return normalizeCategory(category);
 }
 
 /**
@@ -163,15 +208,15 @@ export function validateSortOrder(order) {
 
 /**
  * Validate creation payload shape and normalize values.
- * @param {{title: string, description?: string, status?: string, priority?: string}} payload - Creation input.
- * @returns {{title: string, description: string, status: string, priority: string}} Normalized payload.
+ * @param {{title: string, description?: string, status?: string, priority?: string, category?: string}} payload - Creation input.
+ * @returns {{title: string, description: string, status: string, priority: string, category: string}} Normalized payload.
  * @throws {TypeError} When payload is not a plain object or fields are invalid.
  * @example
  * validateTaskInput({ title: 'Write docs' });
- * // { title: 'Write docs', description: '', status: 'todo', priority: 'medium' }
+ * // { title: 'Write docs', description: '', status: 'todo', priority: 'medium', category: 'general' }
  * @example
- * validateTaskInput({ title: 'Fix bug', priority: 'high' });
- * // { title: 'Fix bug', description: '', status: 'todo', priority: 'high' }
+ * validateTaskInput({ title: 'Fix bug', priority: 'high', category: 'urgent' });
+ * // { title: 'Fix bug', description: '', status: 'todo', priority: 'high', category: 'urgent' }
  */
 export function validateTaskInput(payload) {
   if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) {
@@ -182,33 +227,35 @@ export function validateTaskInput(payload) {
   const normalizedDescription = normalizeDescription(payload.description);
   const status = payload.status === undefined ? 'todo' : validateStatus(payload.status);
   const priority = payload.priority === undefined ? 'medium' : validatePriority(payload.priority);
+  const category = normalizeCategory(payload.category);
 
   return {
     title: normalizedTitle,
     description: normalizedDescription,
     status,
-    priority
+    priority,
+    category
   };
 }
 
 /**
  * Validate update payload shape and normalize allowed values.
- * @param {{title?: string, description?: string, status?: string, priority?: string}} updates - Update input.
- * @returns {{title?: string, description?: string, status?: string, priority?: string}} Normalized updates.
+ * @param {{title?: string, description?: string, status?: string, priority?: string, category?: string}} updates - Update input.
+ * @returns {{title?: string, description?: string, status?: string, priority?: string, category?: string}} Normalized updates.
  * @throws {TypeError} When payload is invalid or no updatable fields are provided.
  * @example
  * validateTaskUpdates({ status: 'done' });
  * // { status: 'done' }
  * @example
- * validateTaskUpdates({ title: 'Refined title', priority: 'low' });
- * // { title: 'Refined title', priority: 'low' }
+ * validateTaskUpdates({ title: 'Refined title', priority: 'low', category: 'personal' });
+ * // { title: 'Refined title', priority: 'low', category: 'personal' }
  */
 export function validateTaskUpdates(updates) {
   if (typeof updates !== 'object' || updates === null || Array.isArray(updates)) {
     throw new TypeError('updates must be a plain object');
   }
 
-  const allowedFields = ['title', 'description', 'status', 'priority'];
+  const allowedFields = ['title', 'description', 'status', 'priority', 'category'];
   const normalizedUpdates = {};
 
   for (const field of allowedFields) {
@@ -228,11 +275,15 @@ export function validateTaskUpdates(updates) {
       if (field === 'priority') {
         normalizedUpdates.priority = validatePriority(updates.priority);
       }
+
+      if (field === 'category') {
+        normalizedUpdates.category = normalizeCategory(updates.category);
+      }
     }
   }
 
   if (Object.keys(normalizedUpdates).length === 0) {
-    throw new TypeError('at least one updatable field is required: title, description, status, priority');
+    throw new TypeError('at least one updatable field is required: title, description, status, priority, category');
   }
 
   return normalizedUpdates;

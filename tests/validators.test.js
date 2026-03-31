@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  normalizeCategory,
   normalizeDescription,
   normalizeTitle,
+  validateCategory,
   validatePriority,
   validateSortBy,
   validateSortOrder,
@@ -45,6 +47,21 @@ test('normalizeDescription throws for non-string values', () => {
   });
 });
 
+test('normalizeCategory returns default for undefined', () => {
+  assert.equal(normalizeCategory(undefined), 'general');
+});
+
+test('normalizeCategory trims and returns category text', () => {
+  assert.equal(normalizeCategory('  work  '), 'work');
+});
+
+test('normalizeCategory rejects empty category values', () => {
+  assert.throws(() => normalizeCategory('   '), {
+    name: 'TypeError',
+    message: 'category must be a non-empty string'
+  });
+});
+
 test('validateStatus accepts allowed values', () => {
   assert.equal(validateStatus('in-progress'), 'in-progress');
 });
@@ -64,6 +81,17 @@ test('validatePriority rejects unsupported values', () => {
   assert.throws(() => validatePriority('urgent'), {
     name: 'TypeError',
     message: 'priority must be one of: low, medium, high'
+  });
+});
+
+test('validateCategory accepts non-empty string values', () => {
+  assert.equal(validateCategory('urgent'), 'urgent');
+});
+
+test('validateCategory rejects non-string values', () => {
+  assert.throws(() => validateCategory(5), {
+    name: 'TypeError',
+    message: 'category must be a non-empty string'
   });
 });
 
@@ -106,7 +134,8 @@ test('validateTaskInput applies defaults and normalization', () => {
     title: 'Write docs',
     description: '',
     status: 'todo',
-    priority: 'medium'
+    priority: 'medium',
+    category: 'general'
   });
 });
 
@@ -118,15 +147,16 @@ test('validateTaskInput rejects non-object payloads', () => {
 });
 
 test('validateTaskUpdates validates and normalizes provided fields', () => {
-  assert.deepEqual(validateTaskUpdates({ title: '  Refine scope  ', status: 'done' }), {
+  assert.deepEqual(validateTaskUpdates({ title: '  Refine scope  ', status: 'done', category: '  work  ' }), {
     title: 'Refine scope',
-    status: 'done'
+    status: 'done',
+    category: 'work'
   });
 });
 
 test('validateTaskUpdates rejects payloads with no updatable fields', () => {
   assert.throws(() => validateTaskUpdates({}), {
     name: 'TypeError',
-    message: 'at least one updatable field is required: title, description, status, priority'
+    message: 'at least one updatable field is required: title, description, status, priority, category'
   });
 });

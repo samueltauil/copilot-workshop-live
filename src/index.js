@@ -13,7 +13,7 @@ import { colorPriority, colorStatus } from './utils/colors.js';
  * @returns {string} Formatted task string.
  */
 function formatTask(task) {
-  return `[${task.id}] ${task.title} | status: ${colorStatus(task.status)} | priority: ${colorPriority(task.priority)}`;
+  return `[${task.id}] ${task.title} | category: ${task.category} | status: ${colorStatus(task.status)} | priority: ${colorPriority(task.priority)}`;
 }
 
 /**
@@ -26,21 +26,24 @@ function runDemo() {
   const firstTask = createTask({
     title: 'Write project brief',
     description: 'Draft scope and constraints for the CLI.',
-    priority: 'high'
+    priority: 'high',
+    category: 'work'
   });
 
   const secondTask = createTask({
     title: 'Implement task update flow',
     description: 'Support status and priority changes.',
     status: 'in-progress',
-    priority: 'medium'
+    priority: 'medium',
+    category: 'urgent'
   });
 
   const thirdTask = createTask({
     title: 'Prepare release checklist',
     description: 'List verification steps before shipping.',
     status: 'todo',
-    priority: 'low'
+    priority: 'low',
+    category: 'personal'
   });
 
   console.log('\nCreated tasks:');
@@ -64,6 +67,9 @@ function runDemo() {
 
   console.log('\nFilter by priority=high:');
   listTasks({ priority: 'high' }).forEach(t => console.log(formatTask(t)));
+
+  console.log('\nFilter by category=work:');
+  listTasks({ category: 'work' }).forEach(t => console.log(formatTask(t)));
 
   console.log('\nSort by priority (desc):');
   listTasks({ sortBy: 'priority', sortOrder: 'desc' }).forEach(t => console.log(formatTask(t)));

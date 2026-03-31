@@ -27,6 +27,7 @@ test('createTask stores and returns a normalized task copy', () => {
   assert.equal(created.description, 'Parse argv safely');
   assert.equal(created.status, 'todo');
   assert.equal(created.priority, 'medium');
+  assert.equal(created.category, 'general');
 
   const tasks = listTasks();
   assert.equal(tasks.length, 1);
@@ -68,13 +69,50 @@ test('getTaskById throws not found for missing task IDs', () => {
 });
 
 test('listTasks filters by status and priority together', () => {
-  createTask({ title: 'A', status: 'todo', priority: 'high' });
-  createTask({ title: 'B', status: 'todo', priority: 'low' });
-  createTask({ title: 'C', status: 'done', priority: 'high' });
+  createTask({ title: 'A', status: 'todo', priority: 'high', category: 'work' });
+  createTask({ title: 'B', status: 'todo', priority: 'low', category: 'personal' });
+  createTask({ title: 'C', status: 'done', priority: 'high', category: 'work' });
 
   const filtered = listTasks({ status: 'todo', priority: 'high' });
   assert.equal(filtered.length, 1);
   assert.equal(filtered[0].title, 'A');
+});
+
+test('listTasks filters by category', () => {
+  createTask({ title: 'Work one', category: 'work' });
+  createTask({ title: 'Personal one', category: 'personal' });
+  createTask({ title: 'Work two', category: 'work' });
+
+  const filtered = listTasks({ category: 'work' });
+  assert.equal(filtered.length, 2);
+  assert.deepEqual(filtered.map((task) => task.title), ['Work one', 'Work two']);
+});
+
+test('listTasks applies status, priority, and category filters together', () => {
+  createTask({ title: 'A', status: 'todo', priority: 'high', category: 'work' });
+  createTask({ title: 'B', status: 'todo', priority: 'high', category: 'personal' });
+  createTask({ title: 'C', status: 'todo', priority: 'low', category: 'work' });
+  createTask({ title: 'D', status: 'done', priority: 'high', category: 'work' });
+
+  const filtered = listTasks({ status: 'todo', priority: 'high', category: 'work' });
+
+  assert.equal(filtered.length, 1);
+  assert.equal(filtered[0].title, 'A');
+});
+
+test('listTasks returns an empty array when category filter has no matches', () => {
+  createTask({ title: 'Work only', category: 'work' });
+
+  const filtered = listTasks({ category: 'urgent' });
+
+  assert.deepEqual(filtered, []);
+});
+
+test('listTasks rejects invalid category filter values', () => {
+  assert.throws(() => listTasks({ category: '   ' }), {
+    name: 'TypeError',
+    message: 'category must be a non-empty string'
+  });
 });
 
 test('listTasks sorts tasks by priority ascending', () => {
@@ -154,12 +192,14 @@ test('updateTask updates fields and returns the updated copy', () => {
 
   const updated = updateTask(created.id, {
     status: 'in-progress',
-    priority: 'high'
+    priority: 'high',
+    category: 'urgent'
   });
 
   assert.equal(updated.id, created.id);
   assert.equal(updated.status, 'in-progress');
   assert.equal(updated.priority, 'high');
+  assert.equal(updated.category, 'urgent');
 });
 
 test('updateTask throws not found for unknown IDs', () => {
