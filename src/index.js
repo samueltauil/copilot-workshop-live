@@ -5,6 +5,16 @@ import {
   listTasks,
   updateTask
 } from './services/taskService.js';
+import { colorPriority, colorStatus } from './utils/colors.js';
+
+/**
+ * Format a task object for display, applying chalk colors to status and priority.
+ * @param {object} task - Task object.
+ * @returns {string} Formatted task string.
+ */
+function formatTask(task) {
+  return `[${task.id}] ${task.title} | status: ${colorStatus(task.status)} | priority: ${colorPriority(task.priority)}`;
+}
 
 /**
  * Demonstrate Task Manager capabilities end to end.
@@ -34,12 +44,12 @@ function runDemo() {
   });
 
   console.log('\nCreated tasks:');
-  console.log(firstTask);
-  console.log(secondTask);
-  console.log(thirdTask);
+  console.log(formatTask(firstTask));
+  console.log(formatTask(secondTask));
+  console.log(formatTask(thirdTask));
 
   console.log('\nAll tasks:');
-  console.log(listTasks());
+  listTasks().forEach(t => console.log(formatTask(t)));
 
   console.log('\nUpdate one task:');
   const updatedTask = updateTask(secondTask.id, {
@@ -47,26 +57,26 @@ function runDemo() {
     priority: 'high',
     title: 'Implement and finalize update flow'
   });
-  console.log(updatedTask);
+  console.log(formatTask(updatedTask));
 
   console.log('\nFilter by status=todo:');
-  console.log(listTasks({ status: 'todo' }));
+  listTasks({ status: 'todo' }).forEach(t => console.log(formatTask(t)));
 
   console.log('\nFilter by priority=high:');
-  console.log(listTasks({ priority: 'high' }));
+  listTasks({ priority: 'high' }).forEach(t => console.log(formatTask(t)));
 
   console.log('\nSort by priority (desc):');
-  console.log(listTasks({ sortBy: 'priority', sortOrder: 'desc' }));
+  listTasks({ sortBy: 'priority', sortOrder: 'desc' }).forEach(t => console.log(formatTask(t)));
 
   console.log('\nSort by createdAt (asc):');
-  console.log(listTasks({ sortBy: 'createdAt', sortOrder: 'asc' }));
+  listTasks({ sortBy: 'createdAt', sortOrder: 'asc' }).forEach(t => console.log(formatTask(t)));
 
   console.log('\nDelete one task:');
   const deletedTask = deleteTask(firstTask.id);
-  console.log(deletedTask);
+  console.log(formatTask(deletedTask));
 
   console.log('\nRemaining tasks after delete:');
-  console.log(listTasks());
+  listTasks().forEach(t => console.log(formatTask(t)));
 
   const clearedCount = clearTasks();
   console.log(`\nCleared ${clearedCount} task(s) from memory.`);
