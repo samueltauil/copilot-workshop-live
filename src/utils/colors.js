@@ -4,7 +4,7 @@ import chalk from 'chalk';
  * Wrap a task status value in the appropriate chalk color.
  * @param {string} status - Task status ('todo', 'in-progress', or 'done').
  * @returns {string} Chalk-colored status string.
- * @throws {TypeError} When status is not a string.
+ * @throws {TypeError} When status is not a string or is not one of the allowed values.
  * @example
  * colorStatus('done');
  * // green-colored 'done'
@@ -25,7 +25,7 @@ export function colorStatus(status) {
     case 'todo':
       return chalk.red(status);
     default:
-      return status;
+      throw new TypeError('status must be one of: todo, in-progress, done');
   }
 }
 
@@ -33,7 +33,7 @@ export function colorStatus(status) {
  * Wrap a task priority value in the appropriate chalk style.
  * @param {string} priority - Task priority ('low', 'medium', or 'high').
  * @returns {string} Chalk-styled priority string.
- * @throws {TypeError} When priority is not a string.
+ * @throws {TypeError} When priority is not a string or is not one of the allowed values.
  * @example
  * colorPriority('high');
  * // bold red 'high'
@@ -54,6 +54,6 @@ export function colorPriority(priority) {
     case 'low':
       return chalk.dim(priority);
     default:
-      return priority;
+      throw new TypeError('priority must be one of: low, medium, high');
   }
 }
